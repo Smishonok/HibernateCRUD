@@ -1,10 +1,20 @@
 package com.valentinnikolaev.jdbccrud.models;
 
+import javax.persistence.*;
 import java.util.Scanner;
 
+@Entity
+@Table(name = "regions")
 public class Region {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long   id;
+
+    @Column
     private String name;
+
+    public Region() {
+    }
 
     public Region(Long id, String name) {
         this.id   = id;

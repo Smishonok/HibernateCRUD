@@ -1,17 +1,40 @@
 package com.valentinnikolaev.jdbccrud.models;
 
+import javax.persistence.*;
+import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table (name = "users")
 public class User {
-    private Long   id;
+    @Id
+    @GeneratedValue (strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column (name = "first_name")
     private String firstName;
+
+    @Column (name = "last_name")
     private String lastName;
+
+    @Column (name = "region_id")
+    @ManyToOne (fetch = FetchType.EAGER, optional = false)
+    @JoinColumn (name = "region_id")
     private Region region;
-    private Role   role;
-    List<Post> posts;
+
+    @Enumerated (EnumType.STRING)
+    @Column (name = "role", columnDefinition = "enum('ADMIN',MODERATOR','USER')")
+    private Role role;
+
+    @OneToMany (fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn (name = "user_id")
+    private List<Post> posts;
 
     private final Role DEFAULT_ROLE = Role.USER;
+
+    public User() {
+    }
 
     public User(Long id, String firstName, String lastName, Region region) {
         this.id        = id;
@@ -110,13 +133,14 @@ public class User {
         }
 
         User comparingObj = (User) obj;
-        return this.firstName.equals(comparingObj.firstName) && this.lastName.equals(
-                comparingObj.lastName) && this.role.toString().equals(comparingObj.role.toString());
+        return this.firstName.equals(comparingObj.firstName) &&
+               this.lastName.equals(comparingObj.lastName) &&
+               this.role.toString().equals(comparingObj.role.toString());
     }
 
     @Override
     public String toString() {
         return "User{" + "id=" + id + ", firstName='" + firstName + '\'' + ", lastName='" +
-                lastName + '\'' + ", region=" + region + ", role=" + role + '}';
+               lastName + '\'' + ", region=" + region + ", role=" + role + '}';
     }
 }

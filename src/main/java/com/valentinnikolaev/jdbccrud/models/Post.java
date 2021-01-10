@@ -1,31 +1,48 @@
 package com.valentinnikolaev.jdbccrud.models;
 
+import javax.persistence.*;
 import java.time.Clock;
 import java.time.LocalDateTime;
 
+@Entity
+@Table (name = "posts")
 public class Post {
+    @Id
+    @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Long id;
-    private Long userId;
+
+    @ManyToOne (fetch = FetchType.EAGER)
+    private User user;
+
+    @Column
     private String content;
+
+    @Column (name = "creating_date")
     private LocalDateTime created;
+
+    @Column (name = "updating_date")
     private LocalDateTime updated;
+
+    @Transient
     private Clock clock;
 
-    public Post(Long id, Long userId, String content, LocalDateTime created,
-                LocalDateTime updated) {
+    public Post() {
+    }
+
+    public Post(Long id, User user, String content, LocalDateTime created, LocalDateTime updated) {
         this.id      = id;
-        this.userId  = userId;
+        this.user    = user;
         this.content = content;
         this.created = created;
         this.updated = updated;
-        this.clock = Clock.systemUTC();
+        this.clock   = Clock.systemUTC();
     }
 
-    public Post(Long id, Long userId, String content, Clock clock) {
+    public Post(Long id, User user, String content, Clock clock) {
         this.id      = id;
-        this.userId  = userId;
+        this.user  = user;
         this.content = content;
-        this.clock = clock;
+        this.clock   = clock;
         this.created = LocalDateTime.now(clock);
         this.updated = created;
     }
@@ -34,8 +51,8 @@ public class Post {
         return id;
     }
 
-    public Long getUserId() {
-        return userId;
+    public User getUser() {
+        return user;
     }
 
     public String getContent() {
@@ -57,7 +74,8 @@ public class Post {
 
     @Override
     public int hashCode() {
-        int hash = this.content.hashCode() + userId.intValue() + created.hashCode() + updated.hashCode();
+        int hash = this.content.hashCode() + user.getId().hashCode() + created.hashCode() +
+                   updated.hashCode();
         return hash;
     }
 
@@ -76,7 +94,7 @@ public class Post {
         }
 
         Post comparingObj = (Post) obj;
-        return this.content.equals(comparingObj.content) && this.userId == comparingObj.getUserId();
+        return this.content.equals(comparingObj.content) && this.user == comparingObj.getUser();
     }
 
     public boolean equalsContent(Post post) {
@@ -85,7 +103,7 @@ public class Post {
 
     @Override
     public String toString() {
-        return "Post{" + "id=" + id + ", userId=" + userId + ", content='" + content + '\'' +
+        return "Post{" + "id=" + id + ", userId=" + user.getId() + ", content='" + content + '\'' +
                ", created=" + created + ", updated=" + updated + '}';
     }
 }

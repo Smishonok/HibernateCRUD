@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog">
+    <!-- Should be only links to per-version cumulative changelog files. -->
+    <include file="v-1.0/changelog-v.1.0-cumulative.xml" relativeToChangelogFile="true"/>
+</databaseChangeLog>

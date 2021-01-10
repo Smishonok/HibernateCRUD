@@ -1,0 +1,27 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext
+   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+   http://www.liquibase.org/xml/ns/dbchangelog
+   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet author="v.nikolaev" id="3" runOnChange="true">
+        <createTable tableName="posts">
+            <column name="id" autoIncrement="true" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" unique="true"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false" unique="false"/>
+            </column>
+            <column name="content" type="TEXT"/>
+            <column name="creating_date" type="BIGINT"/>
+            <column name="updating_date" type="BIGINT"/>
+        </createTable>
+        <addUniqueConstraint tableName="users" columnNames="user_id,content,creating_date"/>
+        <addForeignKeyConstraint baseTableName="posts" baseColumnNames="user_id" constraintName="users_id_fk"
+                                 referencedTableName="users"
+                                 referencedColumnNames="id" deleteCascade="true"/>
+    </changeSet>
+</databaseChangeLog>
