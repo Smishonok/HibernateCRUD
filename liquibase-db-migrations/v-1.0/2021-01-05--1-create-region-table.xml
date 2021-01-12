@@ -16,5 +16,8 @@
                 <constraints nullable="false" unique="true"/>
             </column>
         </createTable>
+        <rollback>
+            <dropTable tableName="regions"/>
+        </rollback>
     </changeSet>
 </databaseChangeLog>

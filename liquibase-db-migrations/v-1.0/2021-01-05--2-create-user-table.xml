@@ -7,8 +7,11 @@
    http://www.liquibase.org/xml/ns/dbchangelog
    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
 
+    <property name="roleType" dbms="postgresql" value="enumType"/>
+    <property name="roleType" dbms="mysql" value="ENUM('ADMIN','MODERATOR','USER')"/>
     <changeSet author="v.nikolaev" id="3" runOnChange="true">
-        <sql>CREATE type roleEnum AS ENUM('ADMIN','MODERATOR','USER')</sql>
+        <sql dbms="postgresql">CREATE type enumType AS ENUM('ADMIN','MODERATOR','USER')</sql>
+
         <createTable tableName="users">
             <column name="id" autoIncrement="true" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" unique="true"/>
@@ -22,11 +25,15 @@
             <column name="region_id" type="BIGINT">
                 <constraints nullable="false"/>
             </column>
-            <column name="role" type="roleEnum"/>
+            <column name="role"  type="${roleType}"/>
         </createTable>
         <addUniqueConstraint tableName="users" columnNames="first_name,last_name"/>
         <addForeignKeyConstraint baseTableName="users" baseColumnNames="region_id" constraintName="users_region_id_fk"
                                  referencedTableName="regions"
                                  referencedColumnNames="id"/>
+        <rollback>
+            <dropTable tableName="users"/>
+            <sql dbms="postgresql">drop type enumtype</sql>
+        </rollback>
     </changeSet>
 </databaseChangeLog>

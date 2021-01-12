@@ -11,5 +11,8 @@
         <dropForeignKeyConstraint baseTableName="posts" constraintName="users_id_fk"/>
         <addForeignKeyConstraint baseTableName="posts" baseColumnNames="user_id" constraintName="users_id_fk" referencedTableName="users"
                                  referencedColumnNames="id" deleteCascade="true"/>
+        <rollback>
+            <dropForeignKeyConstraint baseTableName="posts" constraintName="users_id_fk"/>
+        </rollback>
     </changeSet>
 </databaseChangeLog>
