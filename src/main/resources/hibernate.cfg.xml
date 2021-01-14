@@ -24,8 +24,8 @@
             false
         </property>
 
-        <mapping class="com.valentinnikolaev.jdbccrud.models.User"/>
-        <mapping class="com.valentinnikolaev.jdbccrud.models.Region"/>
-        <mapping class="com.valentinnikolaev.jdbccrud.models.Post"/>
+        <mapping class="com.valentinnikolaev.hibernatecrud.models.User"/>
+        <mapping class="com.valentinnikolaev.hibernatecrud.models.Region"/>
+        <mapping class="com.valentinnikolaev.hibernatecrud.models.Post"/>
     </session-factory>
 </hibernate-configuration>
