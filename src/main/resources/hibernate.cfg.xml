@@ -6,7 +6,7 @@
 <hibernate-configuration>
     <session-factory>
         <property name = "hibernate.connection.driver_class">
-            ${db.url}
+            ${db.driver}
         </property>
         <property name="hibernate.connection.url">
             ${db.url}

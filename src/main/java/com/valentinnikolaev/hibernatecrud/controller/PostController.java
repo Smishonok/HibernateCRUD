@@ -40,7 +40,7 @@ public class PostController {
         Optional<Post> post = Optional.empty();
         if (user.isPresent()) {
             long postId = this.getLastPostId() + 1;
-            post = postRepository.add((new Post(postId, user.get().getId(), content, clock)));
+            post = postRepository.add((new Post(postId, user.get(), content, clock)));
         }
 
         if (post.isEmpty()) {
@@ -97,10 +97,6 @@ public class PostController {
     public boolean removeAllPostByUser(String userId) {
         long id = Long.parseLong(userId);
         return this.postRepository.removePostsByUserId(id);
-    }
-
-    public boolean removeAllPosts() {
-        return this.postRepository.removeAll();
     }
 
     private long getLastPostId() {

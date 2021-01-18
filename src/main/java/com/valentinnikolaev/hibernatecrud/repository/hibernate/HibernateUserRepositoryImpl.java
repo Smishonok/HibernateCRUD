@@ -9,6 +9,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
+import org.hibernate.proxy.HibernateProxy;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -18,6 +21,8 @@ import javax.persistence.criteria.Root;
 import java.util.List;
 import java.util.Optional;
 
+@Component
+@Scope("singleton")
 public class HibernateUserRepositoryImpl implements UserRepository {
 
     private Logger log = LogManager.getLogger(this);
@@ -70,7 +75,13 @@ public class HibernateUserRepositoryImpl implements UserRepository {
     public Optional<User> get(long id, boolean loadPosts) {
         Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
         session.getTransaction().begin();
-        User user = session.find(User.class, id);
+
+        User user = null;
+        try {
+            user = session.find(User.class, id);
+        } catch (Exception e) {
+            log.error("User with id:{} was no find in the database", id, e);
+        }
 
         if (user != null && loadPosts) {
             Hibernate.initialize(user.getPosts());
@@ -85,30 +96,56 @@ public class HibernateUserRepositoryImpl implements UserRepository {
     public Optional<User> change(User entity) {
         Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
         session.getTransaction().begin();
+        session.merge(entity);
+        session.getTransaction().commit();
+        session.close();
 
-        session.update(entity);
-        session.flush();
+        Optional<User> optionalUser;
+        if (entity.getPosts() instanceof HibernateProxy) {
+            optionalUser = get(entity.getId(), false);
+        } else {
+            optionalUser = get(entity.getId(), true);
+        }
 
-        return Optional.empty();
+        return optionalUser;
     }
 
     @Override
-    public boolean remove(Long aLong) {
-        return false;
+    public boolean remove(Long id) {
+        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
+        session.beginTransaction();
+        session.createQuery("delete from User where id=:id").setParameter("id", id).executeUpdate();
+        session.getTransaction().commit();
+        session.close();
+
+        return ! isContains(id);
     }
 
     @Override
     public List<User> getAll() {
-        return null;
+        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
+        session.beginTransaction();
+        CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+        CriteriaQuery<User> query = criteriaBuilder.createQuery(User.class);
+        Root<User> userRoot = query.from(User.class);
+        query.select(userRoot);
+        List<User> users = session.createQuery(query).getResultList();
+        session.getTransaction().commit();
+        session.close();
+        return users;
     }
 
     @Override
-    public boolean removeAll() {
-        return false;
-    }
-
-    @Override
-    public boolean isContains(Long aLong) {
-        return false;
+    public boolean isContains(Long id) {
+        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
+        session.beginTransaction();
+        CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+        CriteriaQuery<User> query = criteriaBuilder.createQuery(User.class);
+        Root<User> userRoot = query.from(User.class);
+        query.select(userRoot).where(criteriaBuilder.equal(userRoot.get("id"), id));
+        boolean isEmpty = session.createQuery(query).getResultList().isEmpty();
+        session.getTransaction().commit();
+        session.close();
+        return ! isEmpty;
     }
 }

@@ -15,8 +15,6 @@ public interface GenericRepository<T, ID> {
 
     List<T> getAll();
 
-    boolean removeAll();
-
     boolean isContains(ID id);
 
 }
