@@ -45,7 +45,7 @@ public class JsonPostRepositoryImpl implements PostRepository {
     @Override
     public List<Post> getPostsByUserId(Long userId) {
         return parser.parseList(FileService.getDataFromRepository(repositoryPath)).stream().filter(
-                post->post.getUserId() == userId).collect(Collectors.toList());
+                post->post.getUser().getId() == userId).collect(Collectors.toList());
     }
 
     @Override
@@ -89,7 +89,7 @@ public class JsonPostRepositoryImpl implements PostRepository {
 
         posts
                 .stream()
-                .filter(post->post.getUserId() == userId)
+                .filter(post->post.getUser().getId() == userId)
                 .collect(Collectors.toList())
                 .forEach(posts::remove);
         FileService.writeDataIntoRepository(parser.serialise(posts), repositoryPath);
@@ -97,14 +97,7 @@ public class JsonPostRepositoryImpl implements PostRepository {
         return parser
                 .parseList(FileService.getDataFromRepository(repositoryPath))
                 .stream()
-                .noneMatch((post->post.getUserId() == userId));
-    }
-
-    @Override
-    public boolean removeAll() {
-        String dataForWritingInRepo = parser.serialise(new ArrayList<>());
-        FileService.writeDataIntoRepository(dataForWritingInRepo, repositoryPath);
-        return parser.parseList(FileService.getDataFromRepository(repositoryPath)).isEmpty();
+                .noneMatch((post->post.getUser().getId() == userId));
     }
 
     @Override

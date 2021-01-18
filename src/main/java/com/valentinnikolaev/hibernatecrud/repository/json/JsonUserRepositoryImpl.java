@@ -81,17 +81,16 @@ public class JsonUserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public boolean removeAll() {
-        String dataForWritingInRepo = parser.serialise(new ArrayList<>());
-        FileService.writeDataIntoRepository(dataForWritingInRepo, repositoryPath);
-        return parser.parseList(FileService.getDataFromRepository(repositoryPath)).isEmpty();
-    }
-
-    @Override
     public boolean isContains(Long aLong) {
         return parser
                 .parseList(FileService.getDataFromRepository(repositoryPath))
                 .stream()
                 .anyMatch(user->user.getId() == aLong);
+    }
+
+    //TODO add correct implementation
+    @Override
+    public Optional<User> get(long id, boolean loadPosts) {
+        return Optional.empty();
     }
 }

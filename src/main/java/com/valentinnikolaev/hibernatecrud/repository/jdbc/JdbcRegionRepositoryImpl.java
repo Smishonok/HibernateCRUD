@@ -119,11 +119,6 @@ public class JdbcRegionRepositoryImpl implements RegionRepository {
     }
 
     @Override
-    public boolean removeAll() {
-        return ConnectionUtils.removeAllFromTable("regions");
-    }
-
-    @Override
     public boolean isContains(Long id) {
         boolean isResultSetNotEmpty = false;
         try {

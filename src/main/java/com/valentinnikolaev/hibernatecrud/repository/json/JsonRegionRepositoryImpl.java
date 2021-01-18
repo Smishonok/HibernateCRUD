@@ -79,13 +79,6 @@ public class JsonRegionRepositoryImpl implements RegionRepository {
     }
 
     @Override
-    public boolean removeAll() {
-        String dataForWritingInRepo = parser.serialise(new ArrayList<>());
-        FileService.writeDataIntoRepository(dataForWritingInRepo, repositoryPath);
-        return parser.parseList(FileService.getDataFromRepository(repositoryPath)).isEmpty();
-    }
-
-    @Override
     public boolean isContains(Long aLong) {
         return parser
                 .parseList(FileService.getDataFromRepository(repositoryPath))

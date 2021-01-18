@@ -152,25 +152,6 @@ public class JdbcUserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public boolean removeAll() {
-        ConnectionUtils.removeAllFromTable("users");
-
-        boolean isDatabaseEmpty = false;
-        try {
-            PreparedStatement preparedStatement = ConnectionUtils.getPreparedStatement(
-                    SQLQueries.SELECT_USER.toString());
-            ResultSet resultSet = preparedStatement.executeQuery();
-            isDatabaseEmpty = ! resultSet.next();
-            resultSet.close();
-            preparedStatement.close();
-        } catch (SQLException e) {
-            log.error("Users can`t be loaded from database", e);
-        }
-
-        return isDatabaseEmpty;
-    }
-
-    @Override
     public boolean isContains(Long id) {
         boolean isContain = false;
         try {
@@ -185,5 +166,11 @@ public class JdbcUserRepositoryImpl implements UserRepository {
             log.error("User can`t be loaded from database", e);
         }
         return isContain;
+    }
+
+    //TODO add correct implementation
+    @Override
+    public Optional<User> get(long id, boolean loadPosts) {
+        return Optional.empty();
     }
 }
