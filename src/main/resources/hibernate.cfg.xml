@@ -18,7 +18,7 @@
             ${db.password}
         </property>
         <property name="hibernate.dialect">
-            ${db.hibernate.dialect}
+            ${hibernate.dialect}
         </property>
         <property name="show_sql">
             false
