@@ -1,11 +1,13 @@
 package com.valentinnikolaev.hibernatecrud.repository.jdbc;
 
 import com.valentinnikolaev.hibernatecrud.models.Post;
+import com.valentinnikolaev.hibernatecrud.models.User;
 import com.valentinnikolaev.hibernatecrud.repository.PostRepository;
 import com.valentinnikolaev.hibernatecrud.utils.ConnectionUtils;
 import com.valentinnikolaev.hibernatecrud.utils.SQLQueries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -22,12 +24,19 @@ public class JdbcPostRepositoryImpl implements PostRepository {
 
     private final Logger log = LogManager.getLogger();
 
+    private JdbcUserRepositoryImpl userRepository;
+
+
+    public JdbcPostRepositoryImpl(@Autowired JdbcUserRepositoryImpl userRepository) {
+        this.userRepository = userRepository;
+    }
+
     @Override
     public Optional<Post> add(Post post) {
         try {
             PreparedStatement preparedStatement = ConnectionUtils.getPreparedStatement(
                     SQLQueries.CREATE_POST.toString());
-            preparedStatement.setLong(1, post.getUserId());
+            preparedStatement.setLong(1, post.getUser().getId());
             preparedStatement.setString(2, post.getContent());
             preparedStatement.setLong(3, post.getDateOfCreation().toEpochSecond(ZoneOffset.UTC));
             preparedStatement.setLong(4, post.getDateOfLastUpdate().toEpochSecond(ZoneOffset.UTC));
@@ -36,7 +45,7 @@ public class JdbcPostRepositoryImpl implements PostRepository {
             log.error("Post can`t be added into the data base", e);
         }
 
-        return getPost(post.getUserId(), post.getContent(), post.getDateOfCreation());
+        return getPost(post.getUser().getId(), post.getContent(), post.getDateOfCreation());
     }
 
     @Override
@@ -85,7 +94,7 @@ public class JdbcPostRepositoryImpl implements PostRepository {
         try {
             PreparedStatement preparedStatement = ConnectionUtils.getPreparedStatement(
                     SQLQueries.UPDATE_POST.toString());
-            preparedStatement.setLong(1, post.getUserId());
+            preparedStatement.setLong(1, post.getUser().getId());
             preparedStatement.setString(2, post.getContent());
             preparedStatement.setLong(3, post.getDateOfCreation().toEpochSecond(ZoneOffset.UTC));
             preparedStatement.setLong(4, post.getDateOfLastUpdate().toEpochSecond(ZoneOffset.UTC));
@@ -152,11 +161,6 @@ public class JdbcPostRepositoryImpl implements PostRepository {
     }
 
     @Override
-    public boolean removeAll() {
-        return ConnectionUtils.removeAllFromTable("posts");
-    }
-
-    @Override
     public boolean isContains(Long id) {
         boolean isResultSetNotEmpty = false;
         try {
@@ -196,12 +200,13 @@ public class JdbcPostRepositoryImpl implements PostRepository {
     private Post getPostFromResultSet(ResultSet resultSet) throws SQLException {
         long id = resultSet.getLong("id");
         long userIdFromDB = resultSet.getLong("user_id");
+        User user = userRepository.get(userIdFromDB).orElse(null);
         String contentFromDB = resultSet.getString("content");
         LocalDateTime creatingDate = LocalDateTime.ofEpochSecond(resultSet.getLong("creating_date"),
                                                                  0, ZoneOffset.UTC);
         LocalDateTime updatingDate = LocalDateTime.ofEpochSecond(resultSet.getLong("updating_date"),
                                                                  0, ZoneOffset.UTC);
 
-        return new Post(id, userIdFromDB, contentFromDB, creatingDate, updatingDate);
+        return new Post(id, user, contentFromDB, creatingDate, updatingDate);
     }
 }

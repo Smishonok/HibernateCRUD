@@ -27,28 +27,6 @@ public class HibernatePostRepositoryImpl implements PostRepository {
     private Logger log = LogManager.getLogger(HibernatePostRepositoryImpl.class);
 
     @Override
-    public List<Post> getPostsByUserId(Long userId) {
-        BiFunction<CriteriaBuilder, Root<Post>, Predicate> restriction = (cb, r)->cb.equal(
-                r.get("userId"), userId);
-
-        return getPosts(restriction);
-    }
-
-    @Override
-    public boolean removePostsByUserId(Long userId) {
-        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
-        session.beginTransaction();
-        session
-                .createQuery("delete from Post p where p.user.id=:userId")
-                .setParameter("userId", userId)
-                .executeUpdate();
-        session.getTransaction().commit();
-        session.close();
-
-        return getPostsByUserId(userId).isEmpty();
-    }
-
-    @Override
     public Optional<Post> add(Post entity) {
         if (entity.getUser() == null) {
             log.warn("User is not defined, post can`t be added into database!");
@@ -70,22 +48,6 @@ public class HibernatePostRepositoryImpl implements PostRepository {
         return get(entity.getUser(), entity.getContent(), entity.getDateOfCreation());
     }
 
-    private Optional<Post> get(User user, String content, LocalDateTime dateOfCreating) {
-        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
-        session.beginTransaction();
-        Optional<Post> optionalPost = session
-                .createQuery("from Post p join User u on p.user.id=u.id where u=:user and p" +
-                             ".content=:content and p.created=:created")
-                .setParameter("user", user)
-                .setParameter("content", content)
-                .setParameter("created", dateOfCreating)
-                .getResultStream()
-                .findFirst();
-        session.getTransaction().commit();
-        session.close();
-        return optionalPost;
-    }
-
     @Override
     public Optional<Post> get(Long aLong) {
         Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
@@ -100,6 +62,14 @@ public class HibernatePostRepositoryImpl implements PostRepository {
         session.close();
 
         return postOptional;
+    }
+
+    @Override
+    public List<Post> getPostsByUserId(Long userId) {
+        BiFunction<CriteriaBuilder, Root<Post>, Predicate> restriction = (cb, r)->cb.equal(
+                r.get("userId"), userId);
+
+        return getPosts(restriction);
     }
 
     @Override
@@ -127,6 +97,20 @@ public class HibernatePostRepositoryImpl implements PostRepository {
     }
 
     @Override
+    public boolean removePostsByUserId(Long userId) {
+        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
+        session.beginTransaction();
+        session
+                .createQuery("delete from Post p where p.user.id=:userId")
+                .setParameter("userId", userId)
+                .executeUpdate();
+        session.getTransaction().commit();
+        session.close();
+
+        return getPostsByUserId(userId).isEmpty();
+    }
+
+    @Override
     public List<Post> getAll() {
         BiFunction<CriteriaBuilder, Root<Post>, Predicate> restriction = (cb, r)->cb.greaterThan(
                 r.get("id"), 0);
@@ -139,6 +123,22 @@ public class HibernatePostRepositoryImpl implements PostRepository {
                 r.get("id"), aLong);
 
         return ! getPosts(restriction).isEmpty();
+    }
+
+    private Optional<Post> get(User user, String content, LocalDateTime dateOfCreating) {
+        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
+        session.beginTransaction();
+        Optional<Post> optionalPost = session
+                .createQuery("from Post p join User u on p.user.id=u.id where u=:user and p" +
+                             ".content=:content and p.created=:created")
+                .setParameter("user", user)
+                .setParameter("content", content)
+                .setParameter("created", dateOfCreating)
+                .getResultStream()
+                .findFirst();
+        session.getTransaction().commit();
+        session.close();
+        return optionalPost;
     }
 
     private List<Post> getPosts(BiFunction<CriteriaBuilder, Root<Post>, Predicate> restriction) {
