@@ -30,7 +30,7 @@ public class PostController {
     public PostController(PostRepository postRepository, UserRepository userRepository,
                           Clock clock) {
         this.postRepository = postRepository;
-        this.userRepository =userRepository;
+        this.userRepository = userRepository;
         this.clock          = clock;
     }
 
@@ -45,6 +45,8 @@ public class PostController {
 
         if (post.isEmpty()) {
             System.out.println("Error! Post wasn't added into repository.");
+        } else {
+            System.out.println("Post added");
         }
     }
 
@@ -80,7 +82,8 @@ public class PostController {
             return false;
         }
 
-        if (postOptionalFromDb.isPresent() && ! postOptional.get().equals(postOptionalFromDb.get())) {
+        if (postOptionalFromDb.isPresent() &&
+            ! postOptional.get().equals(postOptionalFromDb.get())) {
             System.out.println("Post changing is completed");
             return true;
         } else {

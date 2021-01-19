@@ -27,38 +27,36 @@ public class HibernatePostRepositoryImpl implements PostRepository {
     private Logger log = LogManager.getLogger(HibernatePostRepositoryImpl.class);
 
     @Override
-    public Optional<Post> add(Post entity) {
-        if (entity.getUser() == null) {
+    public Optional<Post> add(Post post) {
+        if (post.getUser() == null) {
             log.warn("User is not defined, post can`t be added into database!");
             return Optional.empty();
         }
 
-        try (Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession()) {
-            session.beginTransaction();
-            User user = session.load(User.class, entity.getUser().getId());
-            user.getPosts().add(entity);
-            session.merge(user);
-            session.getTransaction().commit();
-        } catch (Exception e) {
-            log.error("Post was not added into database. User with id: {} is not contains in " +
-                      "database.", entity.getUser().getId(), e);
-            return Optional.empty();
-        }
+        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
+        session.persist(post);
+        Optional<Post> postOptional = session
+                .createQuery("from Post p where p.user=:user and p.content=:content and p" +
+                             ".created=:created",Post.class)
+                .setParameter("user", post.getUser())
+                .setParameter("content", post.getContent())
+                .setParameter("created", post.getDateOfCreation())
+                .getResultStream()
+                .findFirst();
+        session.close();
 
-        return get(entity.getUser(), entity.getContent(), entity.getDateOfCreation());
+        return postOptional;
     }
 
     @Override
-    public Optional<Post> get(Long aLong) {
+    public Optional<Post> get(Long id) {
         Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
-        session.beginTransaction();
         Optional<Post> postOptional = Optional.empty();
         try {
-            postOptional = Optional.of(session.find(Post.class, aLong));
+            postOptional = Optional.of(session.find(Post.class, id));
         } catch (Exception e) {
-            log.error("Post with id: {} is not contains in database", aLong, e);
+            log.error("Post with id: {} is not contains in database", id, e);
         }
-        session.getTransaction().commit();
         session.close();
 
         return postOptional;
@@ -75,25 +73,23 @@ public class HibernatePostRepositoryImpl implements PostRepository {
     @Override
     public Optional<Post> change(Post entity) {
         Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
-        session.beginTransaction();
         session.merge(entity);
-        session.getTransaction().commit();
         session.close();
 
         return get(entity.getId());
     }
 
     @Override
-    public boolean remove(Long aLong) {
+    public boolean remove(Long id) {
         Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
         session.beginTransaction();
         session
                 .createQuery("delete from Post p where p.id=:id")
-                .setParameter("id", aLong)
+                .setParameter("id", id)
                 .executeUpdate();
         session.getTransaction().commit();
         session.close();
-        return ! isContains(aLong);
+        return ! isContains(id);
     }
 
     @Override
@@ -118,27 +114,11 @@ public class HibernatePostRepositoryImpl implements PostRepository {
     }
 
     @Override
-    public boolean isContains(Long aLong) {
+    public boolean isContains(Long id) {
         BiFunction<CriteriaBuilder, Root<Post>, Predicate> restriction = (cb, r)->cb.equal(
-                r.get("id"), aLong);
+                r.get("id"), id);
 
         return ! getPosts(restriction).isEmpty();
-    }
-
-    private Optional<Post> get(User user, String content, LocalDateTime dateOfCreating) {
-        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
-        session.beginTransaction();
-        Optional<Post> optionalPost = session
-                .createQuery("from Post p join User u on p.user.id=u.id where u=:user and p" +
-                             ".content=:content and p.created=:created")
-                .setParameter("user", user)
-                .setParameter("content", content)
-                .setParameter("created", dateOfCreating)
-                .getResultStream()
-                .findFirst();
-        session.getTransaction().commit();
-        session.close();
-        return optionalPost;
     }
 
     private List<Post> getPosts(BiFunction<CriteriaBuilder, Root<Post>, Predicate> restriction) {

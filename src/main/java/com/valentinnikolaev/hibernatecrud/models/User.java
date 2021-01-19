@@ -26,10 +26,11 @@ public class User {
     @Column (name = "role", columnDefinition = "enum('ADMIN',MODERATOR','USER')")
     private Role role;
 
-    @OneToMany (fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn (name = "user_id")
+    @OneToMany (mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL,
+                orphanRemoval = true)
     private List<Post> posts;
 
+    @Transient
     private final Role DEFAULT_ROLE = Role.USER;
 
     public User() {

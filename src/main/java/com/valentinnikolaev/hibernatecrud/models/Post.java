@@ -11,7 +11,9 @@ public class Post {
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "user_id")
     @ManyToOne (fetch = FetchType.EAGER)
+    @JoinColumn(nullable = false,name = "user_id")
     private User user;
 
     @Column

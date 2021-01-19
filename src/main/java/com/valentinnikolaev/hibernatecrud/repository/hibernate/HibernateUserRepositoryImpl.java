@@ -22,49 +22,30 @@ import java.util.List;
 import java.util.Optional;
 
 @Component
-@Scope("singleton")
+@Scope ("singleton")
 public class HibernateUserRepositoryImpl implements UserRepository {
 
     private Logger log = LogManager.getLogger(this);
 
     @Override
-    public Optional<User> add(User entity) {
+    public Optional<User> add(User user) {
         Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
-        session.getTransaction().begin();
-        session.persist(entity);
-        session.flush();
-        session.getTransaction().commit();
+        session.persist(user);
+
+        Optional<User> userOptional = session
+                .createQuery("from User u where u.firstName=:firstName and u.lastName=:lastName " +
+                             "and u.region=:region and u.role=:role", User.class)
+                .setParameter("firstName", user.getFirstName())
+                .setParameter("lastName", user.getLastName())
+                .setParameter("region", user.getRegion())
+                .setParameter("role", user.getRole())
+                .getResultStream()
+                .findFirst();
+
         session.close();
 
-        return getUserByProperties(entity.getFirstName(), entity.getLastName(), entity.getRegion(),
-                                   entity.getRole(), false);
+        return userOptional;
     }
-
-    private Optional<User> getUserByProperties(String firstName, String lastName, Region region,
-                                               Role role, boolean loadPosts) {
-        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
-        session.getTransaction().begin();
-        CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
-        CriteriaQuery<User> query = criteriaBuilder.createQuery(User.class);
-        Root<User> root = query.from(User.class);
-        root.fetch("region", JoinType.LEFT);
-
-        if (loadPosts) {
-            root.fetch("posts", JoinType.INNER);
-        }
-
-        query.select(root);
-        query.where(criteriaBuilder.equal(root.get(firstName), firstName),
-                    criteriaBuilder.equal(root.get(lastName), lastName),
-                    criteriaBuilder.equal(root.get(region.getName()), region.getName()),
-                    criteriaBuilder.equal(root.get(role.toString()), role.toString()));
-        TypedQuery<User> resultQuery = session.createQuery(query);
-
-        session.getTransaction().commit();
-        session.close();
-        return resultQuery.getResultStream().findFirst();
-    }
-
 
     @Override
     public Optional<User> get(Long id) {
@@ -86,6 +67,9 @@ public class HibernateUserRepositoryImpl implements UserRepository {
         if (user != null && loadPosts) {
             Hibernate.initialize(user.getPosts());
         }
+
+        session.getTransaction().commit();
+        session.close();
 
         return user == null
                ? Optional.empty()
