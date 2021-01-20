@@ -17,13 +17,11 @@ public class User {
     @Column (name = "last_name")
     private String lastName;
 
-    @Column (name = "region_id")
     @ManyToOne (fetch = FetchType.EAGER, optional = false)
     @JoinColumn (nullable = false, name = "region_id")
     private Region region;
 
     @Enumerated (EnumType.STRING)
-    @Column (name = "role", columnDefinition = "enum('ADMIN',MODERATOR','USER')")
     private Role role;
 
     @OneToMany (mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL,
@@ -45,7 +43,7 @@ public class User {
         posts          = new ArrayList<>();
     }
 
-    public User(Long id, String firstName, String lastName, Region region, Role role) {
+    public User(String firstName, String lastName, Region region, Role role) {
         this.id        = id;
         this.firstName = firstName;
         this.lastName  = lastName;

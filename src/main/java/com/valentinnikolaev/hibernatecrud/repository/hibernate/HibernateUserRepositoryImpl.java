@@ -30,7 +30,9 @@ public class HibernateUserRepositoryImpl implements UserRepository {
     @Override
     public Optional<User> add(User user) {
         Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
+        session.beginTransaction();
         session.persist(user);
+        session.flush();
 
         Optional<User> userOptional = session
                 .createQuery("from User u where u.firstName=:firstName and u.lastName=:lastName " +
@@ -42,6 +44,7 @@ public class HibernateUserRepositoryImpl implements UserRepository {
                 .getResultStream()
                 .findFirst();
 
+        session.getTransaction().commit();
         session.close();
 
         return userOptional;

@@ -1,5 +1,8 @@
 package com.valentinnikolaev.hibernatecrud.models;
 
+import com.valentinnikolaev.hibernatecrud.utils.hibernateconverters.LocalDateTimeAttributeConverter;
+import org.hibernate.annotations.Type;
+
 import javax.persistence.*;
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -11,7 +14,6 @@ public class Post {
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id")
     @ManyToOne (fetch = FetchType.EAGER)
     @JoinColumn(nullable = false,name = "user_id")
     private User user;
@@ -20,9 +22,11 @@ public class Post {
     private String content;
 
     @Column (name = "creating_date")
+    @Convert(converter = LocalDateTimeAttributeConverter.class)
     private LocalDateTime created;
 
     @Column (name = "updating_date")
+   @Convert(converter = LocalDateTimeAttributeConverter.class)
     private LocalDateTime updated;
 
     @Transient
@@ -31,7 +35,7 @@ public class Post {
     public Post() {
     }
 
-    public Post(Long id, User user, String content, LocalDateTime created, LocalDateTime updated) {
+    public Post(Long id, User user, String content, Clock clock) {
         this.id      = id;
         this.user    = user;
         this.content = content;
@@ -40,8 +44,7 @@ public class Post {
         this.clock   = Clock.systemUTC();
     }
 
-    public Post(Long id, User user, String content, Clock clock) {
-        this.id      = id;
+    public Post(User user, String content, Clock clock) {
         this.user  = user;
         this.content = content;
         this.clock   = clock;

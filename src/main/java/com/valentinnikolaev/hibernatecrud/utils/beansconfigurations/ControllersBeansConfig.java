@@ -6,6 +6,6 @@ import org.springframework.context.annotation.Import;
 
 @Configuration
 @ComponentScan (basePackages = "com.valentinnikolaev.hibernatecrud.controller")
-@Import(JdbcDaoBeansConfig.class)
+@Import(DaoBeansConfig.class)
 public class ControllersBeansConfig {
 }

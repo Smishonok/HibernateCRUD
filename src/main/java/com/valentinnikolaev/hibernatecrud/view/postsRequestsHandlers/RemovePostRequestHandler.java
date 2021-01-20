@@ -42,9 +42,6 @@ public class RemovePostRequestHandler extends PostRequestHandler {
             case USER_ID:
                 removePostByUserId(requestOptions);
                 break;
-            case ALL:
-                removeAllPost();
-                break;
             default:
                 getErrorMessage();
                 break;
@@ -85,10 +82,6 @@ public class RemovePostRequestHandler extends PostRequestHandler {
         }
     }
 
-    private void removeAllPost() {
-        this.postController.removeAllPosts();
-    }
-
     private void getErrorMessage() {
         System.out.println(
                 "Invalid request type. Please, check request and try again, or " + "call \"" +
@@ -100,8 +93,7 @@ public class RemovePostRequestHandler extends PostRequestHandler {
                 "For removing post it can be used next format of request:\n" + "\t1: " + REMOVE +
                         " " + POST_ID + " [id number] - remove post with requested id;" + "\n" +
                         "\t2: " + REMOVE + USER_ID + " [user id number] - remove posts created by" +
-                        " user.\n" + "\t3: " + REMOVE + " " + ALL +
-                        " - remove all posts from repository.\n";
+                        " user.\n";
 
         System.out.println(helpInfo);
     }

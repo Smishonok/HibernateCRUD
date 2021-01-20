@@ -34,20 +34,14 @@ public class PostController {
         this.clock          = clock;
     }
 
-    public void addPost(String userId, String content) {
+    public boolean addPost(String userId, String content) {
         Optional<User> user = this.userRepository.get(Long.parseLong(userId));
-
-        Optional<Post> post = Optional.empty();
-        if (user.isPresent()) {
-            long postId = this.getLastPostId() + 1;
-            post = postRepository.add((new Post(postId, user.get(), content, clock)));
+        if (user.isEmpty()) {
+            return false;
         }
 
-        if (post.isEmpty()) {
-            System.out.println("Error! Post wasn't added into repository.");
-        } else {
-            System.out.println("Post added");
-        }
+        Optional<Post> post = postRepository.add((new Post(user.get(), content, clock)));
+        return post.isPresent();
     }
 
     public Optional<Post> getPost(String postId) {

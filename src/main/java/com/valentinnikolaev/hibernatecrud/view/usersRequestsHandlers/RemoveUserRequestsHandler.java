@@ -42,9 +42,6 @@ public class RemoveUserRequestsHandler extends UserRequestHandler {
                             "Invalid the request`s format to remove user from the repository.\n");
                 }
                 break;
-            case ALL:
-                removeAllUsers();
-                break;
             default:
                 System.out.println(
                         "Invalid option`s type requested. Please, check request`s option" +
@@ -61,11 +58,6 @@ public class RemoveUserRequestsHandler extends UserRequestHandler {
                     "The user`s id should consist only of numbers. Please, check the user`s id " +
                             "and try again.\n");
         }
-    }
-
-    private void removeAllUsers() {
-        this.userController.removeAllUsers();
-        System.out.println("All users was removed from repository.\n");
     }
 
     private void getHelpForRemoveRequest() {

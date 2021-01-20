@@ -21,7 +21,7 @@ public class RegionController {
 
     public void addRegion(String name) {
         Optional<Region> regionOptional = regionRepository.add(
-                new Region(getLastRegionId() + 1, name));
+                new Region().setName(name));
 
         if (regionOptional.isPresent()) {
             System.out.printf("Region with name %1$s added into database.", name);
@@ -82,11 +82,6 @@ public class RegionController {
         long id = Long.parseLong(regionId);
         boolean isRegionRemoved = regionRepository.remove(id);
         return isRegionRemoved;
-    }
-
-    public boolean removeAllRegions() {
-        boolean isAllRegionsRemoved = regionRepository.removeAll();
-        return isAllRegionsRemoved;
     }
 
     public List<Region> getAllRegions() {

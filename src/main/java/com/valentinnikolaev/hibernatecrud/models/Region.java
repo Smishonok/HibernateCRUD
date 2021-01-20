@@ -29,8 +29,9 @@ public class Region {
         return name;
     }
 
-    public void setName(String name) {
+    public Region setName(String name) {
         this.name = name;
+        return this;
     }
 
     public String getDataForSerialisation() {

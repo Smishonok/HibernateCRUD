@@ -43,9 +43,8 @@ public class UserController {
             return;
         }
 
-        long userId = getLastUserId() + 1;
         Optional<User> userOptional = usersRepository.add(
-                new User(userId, firstName, lastName, regionOptional.get(),
+                new User(firstName, lastName, regionOptional.get(),
                          Role.valueOf(roleName)));
 
         if (userOptional.isEmpty()) {
@@ -173,16 +172,5 @@ public class UserController {
 
     public boolean removeUser(String userId) {
         return this.usersRepository.remove(Long.parseLong(userId));
-    }
-
-    public boolean removeAllUsers() {
-        return this.usersRepository.removeAll();
-    }
-
-    private long getLastUserId() {
-        Optional<Long> maxUserId = getAllUsersList().stream().map(User::getId).max(Long::compareTo);
-        return maxUserId.isPresent()
-               ? maxUserId.get()
-               : 0;
     }
 }

@@ -21,13 +21,15 @@ public class HibernateRegionRepositoryImpl implements RegionRepository {
     @Override
     public Optional<Region> add(Region region) {
         Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
+        session.beginTransaction();
         session.persist(region);
-
+        session.flush();
         Optional<Region> regionOptional = session
                 .createQuery("from Region r where r.name=:name", Region.class)
                 .setParameter("name", region.getName())
                 .getResultStream()
                 .findFirst();
+        session.getTransaction().commit();
         session.close();
 
         return regionOptional;
@@ -63,7 +65,8 @@ public class HibernateRegionRepositoryImpl implements RegionRepository {
                 .createQuery("delete from Region r where r.id=:id")
                 .setParameter("id", id)
                 .executeUpdate();
-
+        session.getTransaction().commit();
+        session.close();
 
         return numberOfChangedEntities > 0;
     }

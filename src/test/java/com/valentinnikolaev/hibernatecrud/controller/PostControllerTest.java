@@ -1,6 +1,8 @@
 package com.valentinnikolaev.hibernatecrud.controller;
 
 import com.valentinnikolaev.hibernatecrud.models.Post;
+import com.valentinnikolaev.hibernatecrud.models.Region;
+import com.valentinnikolaev.hibernatecrud.models.User;
 import com.valentinnikolaev.hibernatecrud.repository.PostRepository;
 import com.valentinnikolaev.hibernatecrud.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -34,7 +36,8 @@ class PostControllerTest {
         @DisplayName ("When get post which exist in database then return post")
         public void whenGetPostWhichExistInDbThenReturnPost() {
             Clock clock = Clock.fixed(Instant.parse("2020-12-14T10:15:30.00Z"), ZoneOffset.UTC);
-            Post expectedPost = new Post(1L, 1L, "Test content",clock);
+            User user = new User();
+            Post expectedPost = new Post(1L, user, "Test content",clock);
             Mockito.when(postRepositoryStub.isContains(1L)).thenReturn(true);
             Mockito.when(postRepositoryStub.get(1L)).thenReturn(Optional.of(expectedPost));
             Post actualPost = postController.getPost("1").get();
@@ -58,9 +61,12 @@ class PostControllerTest {
         @DisplayName ("When getAll posts from repository then return all posts")
         public void whenGetAllThenReturnAllPostFromRepository() {
             Clock clock = Clock.fixed(Instant.parse("2020-12-14T10:15:30.00Z"), ZoneOffset.UTC);
-            List<Post> expectedPosts = List.of(new Post(1L, 1L, "TestPost1",clock),
-                                               new Post(2L, 1L, "TestPost2",clock),
-                                               new Post(3L, 2L, "Post from another user",clock));
+            Region region = new Region(1L, "TestRegion");
+            User user1 = new User(1l,"UserName1","UserLastName1",region);
+            User user2 = new User(2l,"UserName2","UserLastName2",region);
+            List<Post> expectedPosts = List.of(new Post(1L, user1, "TestPost1",clock),
+                                               new Post(2L, user1, "TestPost2",clock),
+                                               new Post(3L, user2, "Post from another user",clock));
             Mockito.when(postRepositoryStub.getAll()).thenReturn(expectedPosts);
             List<Post> actualPosts = postController.getAllPostsList();
             assertThat(actualPosts).usingRecursiveComparison().ignoringCollectionOrder().isEqualTo(
@@ -75,9 +81,12 @@ class PostControllerTest {
         @DisplayName ("When get post by user id then return user posts only")
         public void whenGetPostByUserIdThenReturnUserPostOnly() {
             Clock clock = Clock.fixed(Instant.parse("2020-12-14T10:15:30.00Z"), ZoneOffset.UTC);
-            List<Post> expectedPosts = List.of(new Post(1L, 1L, "TestPost1",clock),
-                                               new Post(2L, 1L, "TestPost2",clock),
-                                               new Post(3L, 1L, "One more post from user", clock));
+            Region region = new Region(1L, "TestRegion");
+            User user1 = new User(1l,"UserName1","UserLastName1",region);
+            User user2 = new User(2l,"UserName2","UserLastName2",region);
+            List<Post> expectedPosts = List.of(new Post(1L, user1, "TestPost1",clock),
+                                               new Post(2L, user1, "TestPost2",clock),
+                                               new Post(3L, user2, "One more post from user", clock));
             Mockito.when(postRepositoryStub.getPostsByUserId(1L)).thenReturn(expectedPosts);
             List<Post> actualPosts = postController.getPostsByUserId("1");
             assertThat(actualPosts).usingRecursiveComparison().ignoringCollectionOrder().isEqualTo(
@@ -102,7 +111,9 @@ class PostControllerTest {
         @DisplayName ("When change post content then return changed post")
         public void whenChangePostThenReturnChangedPost() {
             Clock clock = Clock.fixed(Instant.parse("2020-12-14T10:15:30.00Z"), ZoneOffset.UTC);
-            Post postBeforeChanging = new Post(1L, 1L, "Test post", clock);
+            Region region = new Region(1L, "TestRegion");
+            User user = new User(1l,"UserName1","UserLastName1",region);
+            Post postBeforeChanging = new Post(1L, user, "Test post", clock);
             Mockito.when(postRepositoryStub.isContains(1L)).thenReturn(true);
             Mockito.when(postRepositoryStub.get(1L)).thenReturn(Optional.of(postBeforeChanging));
             postBeforeChanging.setContent("Changed test post");

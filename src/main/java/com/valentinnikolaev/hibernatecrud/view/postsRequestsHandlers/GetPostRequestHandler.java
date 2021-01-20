@@ -98,7 +98,7 @@ public class GetPostRequestHandler extends PostRequestHandler {
     }
 
     private void printPost(Post post) {
-        String userName = "User id: " + post.getUserId();
+        String userName = "User id: " + post.getUser().getId();
         String postId = "Post id: " + post.getId();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy mm:HH:ss");
         String postDate = "Post created: " + post.getDateOfCreation().format(formatter);

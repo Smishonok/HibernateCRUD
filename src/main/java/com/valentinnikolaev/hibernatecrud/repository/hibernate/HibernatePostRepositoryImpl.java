@@ -1,10 +1,8 @@
 package com.valentinnikolaev.hibernatecrud.repository.hibernate;
 
 import com.valentinnikolaev.hibernatecrud.models.Post;
-import com.valentinnikolaev.hibernatecrud.models.User;
 import com.valentinnikolaev.hibernatecrud.repository.PostRepository;
 import com.valentinnikolaev.hibernatecrud.utils.HibernateSessionFactoryUtil;
-import javafx.geometry.Pos;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
@@ -15,7 +13,6 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -34,7 +31,10 @@ public class HibernatePostRepositoryImpl implements PostRepository {
         }
 
         Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
+        session.beginTransaction();
         session.persist(post);
+        session.flush();
+
         Optional<Post> postOptional = session
                 .createQuery("from Post p where p.user=:user and p.content=:content and p" +
                              ".created=:created",Post.class)
@@ -43,7 +43,9 @@ public class HibernatePostRepositoryImpl implements PostRepository {
                 .setParameter("created", post.getDateOfCreation())
                 .getResultStream()
                 .findFirst();
+        session.getTransaction().commit();
         session.close();
+
 
         return postOptional;
     }

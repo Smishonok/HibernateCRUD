@@ -39,9 +39,6 @@ public class RemoveRegionRequestHandler extends RegionRequestHandler {
             case ID:
                 removeRegionById(requestOptions);
                 break;
-            case ALL:
-                removeAllRegions();
-                break;
             default:
                 System.out.println(
                         "Invalid request type. Please, check request and try again, or " +
@@ -67,15 +64,10 @@ public class RemoveRegionRequestHandler extends RegionRequestHandler {
         }
     }
 
-    private void removeAllRegions() {
-        this.regionController.removeAllRegions();
-    }
-
     private void getHelpForRemovingRegionDataRequest() {
         String helpInfo =
                 "For removing region`s name it can be used next format of request:\n" + "\t1: " +
-                        REMOVE + " " + ID + " [id number] - remove region with requested id;\n" +
-                        "\t2: " + REMOVE + " " + ALL + " - remove all regions from repository.\n";
+                        REMOVE + " " + ID + " [id number] - remove region with requested id;\n";
 
         System.out.println(helpInfo);
     }
