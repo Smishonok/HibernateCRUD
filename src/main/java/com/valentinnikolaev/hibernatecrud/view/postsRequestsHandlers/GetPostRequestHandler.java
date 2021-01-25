@@ -98,7 +98,9 @@ public class GetPostRequestHandler extends PostRequestHandler {
     }
 
     private void printPost(Post post) {
-        String userName = "User id: " + post.getUser().getId();
+        String userName =
+                "User name: " + post.getUser().getFirstName() + " " + post.getUser().getLastName();
+        String userRegion = "User region: " + post.getUser().getRegion().getName();
         String postId = "Post id: " + post.getId();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy mm:HH:ss");
         String postDate = "Post created: " + post.getDateOfCreation().format(formatter);
@@ -106,9 +108,8 @@ public class GetPostRequestHandler extends PostRequestHandler {
                                   ? ""
                                   : "Post updated: " + post.getDateOfLastUpdate().format(formatter);
 
-        String postView =
-                postId + "\n" + userName + "\n" + postDate + "\t" + postUpdatingDate + "\n" + "\t" +
-                post.getContent() + "\n";
+        String postView = postId + "\n" + userName + "\n" + userRegion + "\n" + postDate + "\t" +
+                          postUpdatingDate + "\n" + "\t" + post.getContent() + "\n";
 
         System.out.println(postView);
     }

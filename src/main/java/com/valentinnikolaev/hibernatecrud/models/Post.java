@@ -14,8 +14,8 @@ public class Post {
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne (fetch = FetchType.EAGER)
-    @JoinColumn(nullable = false,name = "user_id")
+    @ManyToOne (fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, name = "user_id")
     private User user;
 
     @Column
@@ -39,8 +39,6 @@ public class Post {
         this.id      = id;
         this.user    = user;
         this.content = content;
-        this.created = created;
-        this.updated = updated;
         this.clock   = Clock.systemUTC();
     }
 
@@ -48,6 +46,13 @@ public class Post {
         this.user  = user;
         this.content = content;
         this.clock   = clock;
+        this.created = LocalDateTime.now(clock);
+        this.updated = created;
+    }
+
+    public Post(String content, Clock clock) {
+        this.content = content;
+        this.clock = clock;
         this.created = LocalDateTime.now(clock);
         this.updated = created;
     }
@@ -77,17 +82,15 @@ public class Post {
         this.user = user;
     }
 
-    public void setCreated(LocalDateTime created) {
-        this.created = created;
-    }
-
-    public void setUpdated(LocalDateTime updated) {
-        this.updated = updated;
-    }
-
-    public void setContent(String content) {
+    public Post setContent(String content) {
         this.content = content;
         this.updated = LocalDateTime.now(clock);
+        return this;
+    }
+
+    public Post setClock(Clock clock) {
+        this.clock = clock;
+        return this;
     }
 
     @Override
@@ -124,4 +127,48 @@ public class Post {
         return "Post{" + "id=" + id + ", userId=" + user.getId() + ", content='" + content + '\'' +
                ", created=" + created + ", updated=" + updated + '}';
     }
+
+    public static class PostBuilder {
+        private Long postId;
+        private String postContent;
+        private User user;
+        private Clock clock;
+
+        public PostBuilder() {
+        }
+
+        public PostBuilder withId(Long id) {
+            this.postId = id;
+            return this;
+        }
+
+        public PostBuilder withContent(String content) {
+            this.postContent = content;
+            return this;
+        }
+
+        public PostBuilder withUser(User user) {
+            this.user = user;
+            return this;
+        }
+
+        public PostBuilder withClock(Clock clock) {
+            this.clock = clock;
+            return this;
+        }
+
+        public Post build() {
+            if (postId != null && postContent != null && user != null && clock != null) {
+                return new Post(postId, user, postContent, clock);
+            } else if (postId == null && postContent != null && user != null && clock != null) {
+                return new Post(user, postContent, clock);
+            } else if (postId == null && postContent != null && user == null && clock != null) {
+                return new Post(postContent, clock);
+            } else if (postId == null && postContent != null && user == null && clock == null) {
+                return new Post(postContent, Clock.systemUTC());
+            }
+            return new Post();
+        }
+    }
 }
+

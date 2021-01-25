@@ -1,27 +1,36 @@
 package com.valentinnikolaev.hibernatecrud.repository.hibernate;
 
 import com.valentinnikolaev.hibernatecrud.models.Post;
+import com.valentinnikolaev.hibernatecrud.models.User;
 import com.valentinnikolaev.hibernatecrud.repository.PostRepository;
-import com.valentinnikolaev.hibernatecrud.utils.HibernateSessionFactoryUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.LockOptions;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import javax.persistence.criteria.*;
+import java.time.Clock;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
+
 
 @Component
 @Scope ("singleton")
 public class HibernatePostRepositoryImpl implements PostRepository {
 
     private Logger log = LogManager.getLogger(HibernatePostRepositoryImpl.class);
+    private SessionFactory sessionFactory;
+
+    public HibernatePostRepositoryImpl(@Autowired SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
+    }
 
     @Override
     public Optional<Post> add(Post post) {
@@ -30,29 +39,63 @@ public class HibernatePostRepositoryImpl implements PostRepository {
             return Optional.empty();
         }
 
-        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
-        session.beginTransaction();
-        session.persist(post);
-        session.flush();
-
-        Optional<Post> postOptional = session
-                .createQuery("from Post p where p.user=:user and p.content=:content and p" +
-                             ".created=:created",Post.class)
-                .setParameter("user", post.getUser())
-                .setParameter("content", post.getContent())
-                .setParameter("created", post.getDateOfCreation())
-                .getResultStream()
-                .findFirst();
-        session.getTransaction().commit();
+        Session session = sessionFactory.openSession();
+        Transaction transaction = session.beginTransaction();
+        try {
+            session.persist(post);
+            transaction.commit();
+        } catch (Exception e) {
+            transaction.rollback();
+            log.error("Post not added into database.", e);
+        }
         session.close();
 
+        List<BiFunction<CriteriaBuilder, Root<Post>, Predicate>> restrictions = new ArrayList<>();
+        restrictions.add((cb, r)->cb.equal(r.get("user"), post.getUser()));
+        restrictions.add((cb, r)->cb.equal(r.get("content"), post.getContent()));
+        restrictions.add((cb, r)->cb.equal(r.get("created"), post.getDateOfCreation()));
 
-        return postOptional;
+        return getPosts(restrictions.stream().toArray(BiFunction[]::new)).stream().findFirst();
     }
 
     @Override
+    public Optional<Post> add(Long userId, String content, Clock clock) {
+        boolean isTransactionCommitted = true;
+
+        Session session = sessionFactory.openSession();
+        Transaction transaction = session.beginTransaction();
+        Post post = new Post.PostBuilder().withContent(content).withClock(clock).build();
+        try {
+            User loadedUser = session.load(User.class, userId, LockOptions.UPGRADE);
+            post.setUser(loadedUser);
+            loadedUser.addPost(post);
+            session.persist(loadedUser);
+            transaction.commit();
+        } catch (Exception e) {
+            transaction.rollback();
+            isTransactionCommitted = false;
+            log.error("Post not added into database.", e);
+        }
+        session.close();
+
+        Optional<Post> postFromDb = Optional.empty();
+        if (isTransactionCommitted) {
+            List<BiFunction<CriteriaBuilder, Root<Post>, Predicate>> restrictions = new ArrayList<>();
+            restrictions.add((cb, r)->cb.equal(r.get("user").get("id"), userId));
+            restrictions.add((cb, r)->cb.equal(r.get("content"), content));
+            restrictions.add((cb, r)->cb.equal(r.get("created"), post.getDateOfCreation()));
+            postFromDb = getPosts(restrictions.stream().toArray(BiFunction[]::new))
+                    .stream()
+                    .findFirst();
+        }
+
+        return postFromDb;
+    }
+
+
+    @Override
     public Optional<Post> get(Long id) {
-        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
+        Session session = sessionFactory.openSession();
         Optional<Post> postOptional = Optional.empty();
         try {
             postOptional = Optional.of(session.find(Post.class, id));
@@ -67,23 +110,31 @@ public class HibernatePostRepositoryImpl implements PostRepository {
     @Override
     public List<Post> getPostsByUserId(Long userId) {
         BiFunction<CriteriaBuilder, Root<Post>, Predicate> restriction = (cb, r)->cb.equal(
-                r.get("userId"), userId);
+                r.get("user").get("id"), userId);
 
         return getPosts(restriction);
     }
 
     @Override
     public Optional<Post> change(Post entity) {
-        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
-        session.merge(entity);
-        session.close();
+        Session session = sessionFactory.openSession();
+        Transaction transaction = session.beginTransaction();
+        try {
+            session.update(entity);
+            transaction.commit();
+            session.close();
+        } catch (Exception e) {
+            transaction.rollback();
+            session.close();
+            log.error("Illegal entity type. Post was not changed.");
+        }
 
         return get(entity.getId());
     }
 
     @Override
     public boolean remove(Long id) {
-        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
+        Session session = sessionFactory.openSession();
         session.beginTransaction();
         session
                 .createQuery("delete from Post p where p.id=:id")
@@ -96,7 +147,7 @@ public class HibernatePostRepositoryImpl implements PostRepository {
 
     @Override
     public boolean removePostsByUserId(Long userId) {
-        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
+        Session session = sessionFactory.openSession();
         session.beginTransaction();
         session
                 .createQuery("delete from Post p where p.user.id=:userId")
@@ -123,14 +174,25 @@ public class HibernatePostRepositoryImpl implements PostRepository {
         return ! getPosts(restriction).isEmpty();
     }
 
-    private List<Post> getPosts(BiFunction<CriteriaBuilder, Root<Post>, Predicate> restriction) {
-        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
+    private List<Post> getPosts(
+            BiFunction<CriteriaBuilder, Root<Post>, Predicate>... restrictions) {
+        Session session = sessionFactory.openSession();
         session.beginTransaction();
+
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<Post> query = criteriaBuilder.createQuery(Post.class);
         Root<Post> root = query.from(Post.class);
-        query.select(root).where(restriction.apply(criteriaBuilder, root));
+        root.fetch("user", JoinType.LEFT).fetch("region", JoinType.LEFT);
+        query
+                .select(root)
+                .where(List
+                               .of(restrictions)
+                               .stream()
+                               .map(r->r.apply(criteriaBuilder, root))
+                               .toArray(Predicate[]::new));
+
         List<Post> posts = session.createQuery(query).getResultList();
+
         session.getTransaction().commit();
         session.close();
         return posts;

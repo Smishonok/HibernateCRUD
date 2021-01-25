@@ -35,12 +35,12 @@ public class PostController {
     }
 
     public boolean addPost(String userId, String content) {
-        Optional<User> user = this.userRepository.get(Long.parseLong(userId));
-        if (user.isEmpty()) {
-            return false;
-        }
+//        Optional<User> user = this.userRepository.get(Long.parseLong(userId));
+//        if (user.isEmpty()) {
+//            return false;
+//        }
 
-        Optional<Post> post = postRepository.add((new Post(user.get(), content, clock)));
+        Optional<Post> post = postRepository.add(Long.parseLong(userId),content,clock);
         return post.isPresent();
     }
 
@@ -69,6 +69,7 @@ public class PostController {
         Optional<Post> postOptionalFromDb = Optional.empty();
         if (postOptional.isPresent()) {
             Post post = postOptional.get();
+            post.setClock(clock);
             post.setContent(newContent);
             postOptionalFromDb = postRepository.change(post);
         } else {

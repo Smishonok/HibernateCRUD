@@ -1,19 +1,17 @@
 package com.valentinnikolaev.hibernatecrud.repository.hibernate;
 
-import com.valentinnikolaev.hibernatecrud.models.Region;
-import com.valentinnikolaev.hibernatecrud.models.Role;
 import com.valentinnikolaev.hibernatecrud.models.User;
 import com.valentinnikolaev.hibernatecrud.repository.UserRepository;
-import com.valentinnikolaev.hibernatecrud.utils.HibernateSessionFactoryUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.proxy.HibernateProxy;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.JoinType;
@@ -26,10 +24,15 @@ import java.util.Optional;
 public class HibernateUserRepositoryImpl implements UserRepository {
 
     private Logger log = LogManager.getLogger(this);
+    private SessionFactory sessionFactory;
+
+    public HibernateUserRepositoryImpl(@Autowired SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
+    }
 
     @Override
     public Optional<User> add(User user) {
-        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
+        Session session = sessionFactory.openSession();
         session.beginTransaction();
         session.persist(user);
         session.flush();
@@ -57,7 +60,7 @@ public class HibernateUserRepositoryImpl implements UserRepository {
 
     @Override
     public Optional<User> get(long id, boolean loadPosts) {
-        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
+        Session session = sessionFactory.openSession();
         session.getTransaction().begin();
 
         User user = null;
@@ -81,7 +84,7 @@ public class HibernateUserRepositoryImpl implements UserRepository {
 
     @Override
     public Optional<User> change(User entity) {
-        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
+        Session session = sessionFactory.openSession();
         session.getTransaction().begin();
         session.merge(entity);
         session.getTransaction().commit();
@@ -99,7 +102,7 @@ public class HibernateUserRepositoryImpl implements UserRepository {
 
     @Override
     public boolean remove(Long id) {
-        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
+        Session session = sessionFactory.openSession();
         session.beginTransaction();
         session.createQuery("delete from User where id=:id").setParameter("id", id).executeUpdate();
         session.getTransaction().commit();
@@ -110,11 +113,12 @@ public class HibernateUserRepositoryImpl implements UserRepository {
 
     @Override
     public List<User> getAll() {
-        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
+        Session session = sessionFactory.openSession();
         session.beginTransaction();
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<User> query = criteriaBuilder.createQuery(User.class);
         Root<User> userRoot = query.from(User.class);
+        userRoot.fetch("region", JoinType.LEFT);
         query.select(userRoot);
         List<User> users = session.createQuery(query).getResultList();
         session.getTransaction().commit();
@@ -124,7 +128,7 @@ public class HibernateUserRepositoryImpl implements UserRepository {
 
     @Override
     public boolean isContains(Long id) {
-        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
+        Session session = sessionFactory.openSession();
         session.beginTransaction();
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<User> query = criteriaBuilder.createQuery(User.class);

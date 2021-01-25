@@ -5,6 +5,8 @@ import com.valentinnikolaev.hibernatecrud.models.Role;
 import com.valentinnikolaev.hibernatecrud.models.User;
 import com.valentinnikolaev.hibernatecrud.repository.RegionRepository;
 import com.valentinnikolaev.hibernatecrud.repository.UserRepository;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -17,6 +19,8 @@ import java.util.stream.Collectors;
 @Component
 @Scope ("singleton")
 public class UserController {
+
+    private Logger log = LogManager.getLogger(UserController.class);
 
     private UserRepository usersRepository;
     private RegionRepository regionRepository;
@@ -55,11 +59,15 @@ public class UserController {
     }
 
     public Optional<User> getUserById(String id) {
-        long userId = Long.parseLong(id);
-        Optional<User> user = this.usersRepository.isContains(userId)
-                              ? usersRepository.get(userId)
-                              : Optional.empty();
-
+        Optional<User> user = Optional.empty();
+        try {
+            long userId = Long.parseLong(id);
+            user = this.usersRepository.isContains(userId)
+                                  ? usersRepository.get(userId)
+                                  : Optional.empty();
+        } catch (NumberFormatException e) {
+            log.error("User id has wrong format!");
+        }
         return user;
     }
 

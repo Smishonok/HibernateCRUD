@@ -17,7 +17,7 @@ public class User {
     @Column (name = "last_name")
     private String lastName;
 
-    @ManyToOne (fetch = FetchType.EAGER, optional = false)
+    @ManyToOne (fetch = FetchType.LAZY, optional = false)
     @JoinColumn (nullable = false, name = "region_id")
     private Region region;
 

@@ -57,13 +57,7 @@ public class ChangeRegionRequestHandler extends RegionRequestHandler {
             return;
         }
 
-        Optional<Region> region = this.regionController.getRegionById(regionId);
-        if (region.isPresent()) {
-            this.regionController.changeRegionName(regionId, regionName);
-        } else {
-            System.out.println(
-                    "The repository does not contain the region with ID: " + regionId + "\n");
-        }
+        this.regionController.changeRegionName(regionId, regionName);
     }
 
     private void getHelpForChangingRegionDataRequest() {

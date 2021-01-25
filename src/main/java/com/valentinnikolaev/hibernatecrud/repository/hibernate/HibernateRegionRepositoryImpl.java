@@ -2,10 +2,12 @@ package com.valentinnikolaev.hibernatecrud.repository.hibernate;
 
 import com.valentinnikolaev.hibernatecrud.models.Region;
 import com.valentinnikolaev.hibernatecrud.repository.RegionRepository;
-import com.valentinnikolaev.hibernatecrud.utils.HibernateSessionFactoryUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -17,10 +19,15 @@ import java.util.Optional;
 public class HibernateRegionRepositoryImpl implements RegionRepository {
 
     private Logger log = LogManager.getLogger(HibernateRegionRepositoryImpl.class);
+    private SessionFactory sessionFactory;
+
+    public HibernateRegionRepositoryImpl(@Autowired SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
+    }
 
     @Override
     public Optional<Region> add(Region region) {
-        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
+        Session session = sessionFactory.openSession();
         session.beginTransaction();
         session.persist(region);
         session.flush();
@@ -37,7 +44,7 @@ public class HibernateRegionRepositoryImpl implements RegionRepository {
 
     @Override
     public Optional<Region> get(Long id) {
-        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
+        Session session = sessionFactory.openSession();
         Region region = session.find(Region.class, id);
         session.close();
 
@@ -48,9 +55,13 @@ public class HibernateRegionRepositoryImpl implements RegionRepository {
 
     @Override
     public Optional<Region> change(Region entity) {
-        try (Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();) {
-            session.merge(entity);
+        Session session = sessionFactory.openSession();
+        Transaction transaction = session.beginTransaction();
+        try  {
+            session.update(entity);
+            session.getTransaction().commit();
         } catch (Exception e) {
+            transaction.rollback();
             log.error("Illegal type of entity or entity was removed.");
         }
 
@@ -59,7 +70,7 @@ public class HibernateRegionRepositoryImpl implements RegionRepository {
 
     @Override
     public boolean remove(Long id) {
-        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
+        Session session = sessionFactory.openSession();
         session.beginTransaction();
         int numberOfChangedEntities = session
                 .createQuery("delete from Region r where r.id=:id")
@@ -73,7 +84,7 @@ public class HibernateRegionRepositoryImpl implements RegionRepository {
 
     @Override
     public List<Region> getAll() {
-        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
+        Session session = sessionFactory.openSession();
         List<Region> regionsList = session.createQuery("from Region", Region.class).getResultList();
         session.close();
         return regionsList;
@@ -81,7 +92,7 @@ public class HibernateRegionRepositoryImpl implements RegionRepository {
 
     @Override
     public boolean isContains(Long id) {
-        Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
+        Session session = sessionFactory.openSession();
         List<Region> regionsList = session.createQuery("from Region", Region.class).getResultList();
         session.close();
         return regionsList.size() == 1;
