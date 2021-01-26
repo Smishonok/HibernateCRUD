@@ -26,10 +26,21 @@ public class HibernateSessionFactoryUtil {
         if (sessionFactory == null) {
             try {
                 Configuration configuration = new Configuration().configure();
-                configuration.setProperty("hibernate.connection.url", "jdbc:postgresql://localhost:5532/postgres");
+
+                configuration.setProperty("hibernate.connection.url", "jdbc:postgresql" +
+                                                                      "://localhost:5432/postgres");
+                configuration.setProperty("hibernate.connection.driver_class",
+                                          "org.postgresql" + ".Driver");
+                configuration.setProperty("hibernate.connection.username", "postgres");
+                configuration.setProperty("hibernate.connection.password", "niscoraguaManagua86");
+                configuration.setProperty("hibernate.dialect",
+                                          "org.hibernate.dialect" + ".PostgreSQL95Dialect");
+                configuration.setProperty("hibernate.default_schema", "crud_prod");
+
                 configuration.addAnnotatedClass(User.class);
                 configuration.addAnnotatedClass(Post.class);
                 configuration.addAnnotatedClass(Region.class);
+
                 StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder().applySettings(
                         configuration.getProperties());
                 sessionFactory = configuration.buildSessionFactory(builder.build());
