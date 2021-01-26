@@ -26,6 +26,7 @@ public class HibernateSessionFactoryUtil {
         if (sessionFactory == null) {
             try {
                 Configuration configuration = new Configuration().configure();
+                configuration.setProperty("hibernate.connection.url", "jdbc:postgresql://localhost:5532/postgres");
                 configuration.addAnnotatedClass(User.class);
                 configuration.addAnnotatedClass(Post.class);
                 configuration.addAnnotatedClass(Region.class);
